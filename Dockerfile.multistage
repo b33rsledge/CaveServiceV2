@@ -1,0 +1,48 @@
+#Usage
+#
+# docker build -t b33rsledge/caveservice:v3 -f ./Dockerfile.multistage .
+# docker push b33rsledge/caveservice:v3
+#
+# Manually run in docker with redis DB
+# 1 docker network create csnet
+# 2 docker run --name alpha-redis -p 6379:6379 --hostname redisdb --network=csnet --rm -d redis redis-server
+# 3 docker run --rm  --network=csnet -p 8080:8080  -ti b33rsledge/caveservice java -jar /caveservice.jar 
+
+#-----------------------------------------------------------------------------------------------------------------------
+#BUILDER 
+#-----------------------------------------------------------------------------------------------------------------------
+FROM gradle:6.9.1-jdk11 as builder
+
+MAINTAINER Peter Højbjerg
+
+# Copy the entire skycave project to ensure everything is present.
+COPY --chown=gradle:gradle ./service /root/service
+
+# Setup workdir to ensure gradle is run from the right location
+WORKDIR /root/service
+
+# Cleanup build directory
+RUN gradle clean
+
+# Create the server daemon jar file to be used in the image
+RUN gradle bootJar
+#-----------------------------------------------------------------------------------------------------------------------
+#Image 
+#-----------------------------------------------------------------------------------------------------------------------
+FROM openjdk:14-jdk-alpine
+
+MAINTAINER AlfaTeam
+
+COPY --from=builder /root/service/build/libs/service-0.0.1-SNAPSHOT.jar /root/service/service.jar
+
+#Expose port 8080 as default
+EXPOSE 8080
+
+#Setup encoding
+ENV JAVA_TOOL_OPTIONS -Dfile.encoding=UTF8
+
+# Setup workdir to ensure later command can find jar file and do ensure yaml file does not need full path in command.
+WORKDIR /root/service
+
+#default command 
+CMD ["java", "-jar",  "/root/service/service.jar"]
