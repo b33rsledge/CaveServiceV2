@@ -1,0 +1,8 @@
+{
+  "properties": [
+    {
+      "name": "storage.room",
+      "type": "java.lang.String",
+      "description": "Configure the storage type for the Room document. It can be memoryStorage, redisStorage or mongoStorage"
+  }
+] }

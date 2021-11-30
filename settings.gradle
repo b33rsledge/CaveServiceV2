@@ -1,0 +1,4 @@
+rootProject.name = 'CaveServiceExtended'
+include 'service'
+include 'integration'
+

@@ -1,0 +1,78 @@
+plugins {
+    id 'java'
+    id 'war'
+}
+
+group 'dk.msdo.caveservice'
+version '1.0-SNAPSHOT'
+
+repositories {
+    mavenCentral()
+}
+
+// === Define configurations for integration testing
+//     Source: §7 in Gradle in Action, Manning 2014, and DZone
+// and https://www.baeldung.com/gradle-source-sets
+tasks.withType(JavaCompile) {
+    options.encoding = 'UTF-8'
+}
+
+
+sourceSets {
+    inttest {
+        compileClasspath += sourceSets.main.output
+        runtimeClasspath += sourceSets.main.output
+        java {
+        }
+    }
+}
+
+configurations {
+    inttestImplementation.extendsFrom(testImplementation)
+    inttestRuntimeOnly.extendsFrom(testRuntimeOnly)
+}
+
+dependencies {
+    testImplementation 'org.junit.jupiter:junit-jupiter-api:5.7.0'
+    testRuntimeOnly 'org.junit.jupiter:junit-jupiter-engine:5.7.0'
+
+
+    providedCompile 'javax.servlet:javax.servlet-api:4.0.1'
+
+    //implementation 'org.springframework.boot:spring-boot-starter-web-services:2.5.6'
+    implementation 'junit:junit:4.13.2'
+    //testImplementation 'org.springframework.boot:spring-boot-starter-test:2.5.6'
+
+    // Need TestContainers
+    inttestImplementation 'org.testcontainers:testcontainers:1.16.2'
+
+    // Lombok
+    compileOnly 'org.projectlombok:lombok:1.18.22'
+    annotationProcessor 'org.projectlombok:lombok:1.18.22'
+
+    testCompileOnly 'org.projectlombok:lombok:1.18.22'
+    testAnnotationProcessor 'org.projectlombok:lombok:1.18.22'
+
+    implementation 'com.google.code.gson:gson:2.8.9'
+    implementation group: 'com.konghq', name: 'unirest-java', version: '3.13.3'
+
+    testImplementation "org.testcontainers:junit-jupiter:1.16.2"
+    testImplementation('org.hamcrest:hamcrest-library:2.2')
+    testImplementation 'commons-httpclient:commons-httpclient:20020423'
+
+    implementation 'org.slf4j:slf4j-log4j12:1.7.32'
+
+}
+
+test {
+    useJUnitPlatform()
+}
+
+
+task itest(type: Test) {
+    description = "Run integration tests"
+    group = "Verification"
+    testClassesDirs = sourceSets.inttest.output.classesDirs
+    classpath = sourceSets.inttest.runtimeClasspath
+}
+
