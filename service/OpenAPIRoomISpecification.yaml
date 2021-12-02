@@ -1,0 +1,143 @@
+openapi: 3.0.3
+servers:
+  - description: Cave Service on Digital Ocean
+    url: http://165.232.71.76:8080/v2
+info:
+  description: API specification for SkyCave cave service.
+  version: "2.0.0"
+  title: CaveServiceAPI
+  contact:
+    email: phg@live.dk
+  license:
+    name: Apache 2.0
+    url: 'http://www.apache.org/licenses/LICENSE-2.0.html'
+tags:
+  - name: room
+    description: rooms in the cave
+paths:
+  /room/{position}:
+    get:
+      tags:
+        - room
+      summary: Gets room information
+      description: |
+        LirumLarum
+      parameters:
+        - in: path
+          name: position
+          description: pass a positionString  for looking up room
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: search results matching criteria
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/roomItem'
+        '400':
+          description: 'bad input parameter'
+    post:
+      tags:
+        - room
+      summary: Adds a room to the cave
+      description: Adds a room to the cave
+      parameters:
+        - in: path
+          name: position
+          description: position at which to create the room
+          required: true
+          schema:
+            type: string
+      responses:
+        '201':
+          description: item created
+        '400':
+          description: 'invalid input, object invalid'
+        '409':
+          description: 'an existing item already exists'
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/roomItem'
+        description: room item to add
+    put:
+      tags:
+        - room
+      summary: Adds a room to the cave
+      description: Adds a room to the cave
+      parameters:
+        - in: path
+          name: position
+          description: position at which to create the room
+          required: true
+          schema:
+            type: string
+      responses:
+        '201':
+          description: item created
+        '400':
+          description: 'invalid input, object invalid'
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/roomItem'
+        description: room item to add
+  /room/{position}/exits:
+    get:
+      tags:
+        - room
+      summary: Gets possible exits from room
+      description: |
+        Will return the exits from a room derived from adjacents rooms in the cave.
+      parameters:
+        - in: path
+          name: position
+          description: pass a positionString  for looking up room
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: search results matching criteria
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  enum:
+                    - NORTH
+                    - SOUTH
+                    - EAST
+                    - WEST
+                    - UP
+                    - DOWN
+        '400':
+          description: 'bad input parameter'
+        '404':
+          description: 'Room not found'
+components:
+  schemas:
+    roomItem:
+      type: object
+      required:
+        - description
+        - creatorId
+      properties:
+        description:
+          type: string
+          example: LirumLarum
+        creatorId:
+          type: string
+          example: "42"
+        id:
+          type: string
+          example: (0,0,0)
+        creationTimeISO8601:
+          type: string
+          example: ""

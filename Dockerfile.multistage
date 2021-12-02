@@ -35,7 +35,10 @@ MAINTAINER AlfaTeam
 
 COPY --from=builder /root/service/build/libs/service-0.0.1-SNAPSHOT.jar /root/service/service.jar
 
-#Expose port 8080 as default
+# Required for healthchecks
+RUN apk --no-cache add curl
+
+# Expose port 8080 as default
 EXPOSE 8080
 
 #Setup encoding

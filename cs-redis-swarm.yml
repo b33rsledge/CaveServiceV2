@@ -1,0 +1,94 @@
+version: '3.4'
+# Usage for caveservice
+
+#  -- After update just run deploy again
+#   docker stack deploy --with-registry-auth -c cs-swarm.yml csstack
+
+# docker service ls
+
+# services will be deployed on nodes with node.labels.type = services
+# databases will be deployed on nodes with node.labels.type = database
+
+services:
+  caveservice:
+    image: b33rsledge/caveservice:adv1
+
+    environment:
+
+      # Disable autoconfiguration of MongoDB.
+      autoconfigure.exclude: org.springframework.boot.autoconfigure.mongo.MongoAutoConfiguration
+
+      # Redis DB properties - only relevant when storage.room = redisStorage
+      spring.redis.host: rediscs
+      spring.redis.port: 6380
+      spring.redis.timeout: 60000
+
+      # Debug enabled/disabled
+      debug: disabled
+
+      # Configuration of storage type. Possible types are memoryStorage, redisStorage, mongoStorage
+      storage.room: redisStorage
+    ports:
+      - "8080:8080"
+    networks:
+      - cs-network
+    depends_on:  #not working in swarm mode
+      - rediscs
+    command: java -jar /root/service/service.jar
+
+    # Health check options
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8080/actuator/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+
+    # Deployment options
+    deploy:
+      replicas: 1
+      restart_policy:
+        delay: 5s
+        max_attempts: 3
+
+  rediscs:
+    image: redis:6.2.5-alpine
+    command: --port 6380
+    volumes:
+      - redisdata_cs:/data/cs
+    networks:
+      - cs-network
+    deploy:
+      replicas: 1
+      restart_policy:
+        delay: 5s
+        max_attempts: 3
+      resources:
+        limits:
+          cpus: "0.1"
+          memory: 100M
+#    healthcheck:
+#      test: ["CMD", "redis-cli", "ping"]
+#      interval: 60s
+#      timeout: 3s
+#      retries: 5
+  visualizer:
+    image: dockersamples/visualizer
+    volumes:
+      - "/var/run/docker.sock:/var/run/docker.sock"
+    ports:
+      - "9000:8080"
+    networks:
+      - cs-network
+    deploy:
+      replicas: 1
+      restart_policy:
+        condition: on-failure
+      placement:
+        constraints:
+          - node.role == manager
+volumes:
+  redisdata_cs:
+    external: false
+networks:
+  cs-network: {}
+  public:

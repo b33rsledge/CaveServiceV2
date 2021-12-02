@@ -10,8 +10,26 @@ spring:
       host: "localhost"
       database: "caveservice"
       port:  27017
-  autoconfigure:
-    exclude: org.springframework.boot.autoconfigure.mongo.MongoAutoConfiguration, org.springframework.boot.autoconfigure.data.redis.RedisAutoConfiguration
+management:
+  health:
+    redis:
+      enabled: false
+    mongo:
+      enabled: false
+  endpoint:
+    health:
+      show-details: always
+      show-components: always
+
+    # Shutdown endpoint configuration
+    shutdown:
+      enabled: false
+
+  # Actuator endpoint configuration
+  endpoints:
+    web:
+      exposure:
+        include: 'health, info'
 server:
   error:
     include-message: always
@@ -19,6 +37,6 @@ server:
 debug: false
 storage:
   #room: redisStorage
-  room: mongoStorage
+  room: redisStorage
   #room: memoryStorage
 

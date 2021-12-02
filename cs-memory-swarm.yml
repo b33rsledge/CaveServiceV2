@@ -1,0 +1,62 @@
+version: '3.4'
+# Usage for caveservice
+
+#  -- After update just run deploy again
+#   docker stack deploy --with-registry-auth -c cs-memory-swarm.yml csstack
+
+services:
+  caveservice:
+    image: b33rsledge/caveservice:adv1
+
+    environment:
+
+      # Disable autoconfiguration of RedisDB and MongoDB.
+      autoconfigure.exclude: org.springframework.boot.autoconfigure.mongo.MongoAutoConfiguration, org.springframework.boot.autoconfigure.data.redis.RedisAutoConfiguration
+
+      # Debug enabled/disabled
+      debug: enabled
+
+      # Configuration of storage type. Possible types are memoryStorage, redisStorage, mongoStorage
+      storage.room: memoryStorage
+    ports:
+      - "8080:8080"
+    networks:
+      - cs-network
+
+    command: java -jar /root/service/service.jar
+
+    # Enable healtcheck and set options
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8080/actuator/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+
+    # Deployment options
+    deploy:
+      replicas: 1
+      restart_policy:
+        delay: 5s
+        max_attempts: 3
+
+  visualizer:
+    image: dockersamples/visualizer
+    volumes:
+      - "/var/run/docker.sock:/var/run/docker.sock"
+    ports:
+      - "9000:8080"
+    networks:
+      - cs-network
+    deploy:
+      replicas: 1
+      restart_policy:
+        condition: on-failure
+      placement:
+        constraints:
+          - node.role == manager
+volumes:
+  redisdata_cs:
+    external: false
+networks:
+  cs-network: {}
+  public:

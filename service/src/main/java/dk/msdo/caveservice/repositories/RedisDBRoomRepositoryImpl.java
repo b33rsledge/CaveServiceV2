@@ -25,8 +25,7 @@ import java.util.*;
  * Author: Team Alpha
  */
 @Repository
-@ConditionalOnProperty(value = "storage.room",
-        havingValue = "redisStorage")
+@ConditionalOnProperty(value = "storage.room", havingValue = "redisStorage")
 public class RedisDBRoomRepositoryImpl implements RoomRepository {
 
     private static final Logger logger = LoggerFactory.getLogger(RedisDBRoomRepositoryImpl.class);

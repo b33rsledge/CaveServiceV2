@@ -1,2 +1,6 @@
+plugins {
+    id 'com.gorylenko.gradle-git-properties' version '2.3.1'
+}
 group 'dk.msdo.caveservice'
 version '1.0-SNAPSHOT'
+

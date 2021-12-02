@@ -1,0 +1,87 @@
+version: '3.4'
+# Usage for caveservice
+
+#  -- After update just run deploy again
+#   docker stack deploy --with-registry-auth -c cs-mongo-swarm.yml csstack
+
+# docker service ls
+
+services:
+  caveservice:
+    image: b33rsledge/caveservice:adv1
+
+    environment:
+
+      # Disable autoconfiguration of RedisDB because it is not used
+      autoconfigure.exclude: org.springframework.boot.autoconfigure.data.redis.RedisAutoConfiguration
+
+      # Mongo DB properties - theese are just relevant when storage.room = mongoStorage
+      spring.data.mongodb.host: mongocs
+      spring.data.mongodb.database: "caveservice"
+      spring.data.mongodb.port:  27017
+
+      # Debug info in log: true/false
+      debug: disabled
+
+      # Configuration of storage type. Possible types are memoryStorage, redisStorage, mongoStorage
+      storage.room: mongoStorage
+    ports:
+      - "8080:8080"
+    networks:
+      - cs-network
+    depends_on:  #not working in swarm mode
+      - mongocs
+
+    # command to execute in b33rsledge/caveservice:adv1
+    command: java -jar /root/service/service.jar
+
+    # Enable health check and set options
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8080/actuator/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+
+    # Deployment options
+    deploy:
+      replicas: 1
+      restart_policy:
+        delay: 5s
+        max_attempts: 3
+
+  mongocs:
+    image: mongo:5.0.4
+    volumes:
+      - mongodata_cs:/data/cs/mongo
+    networks:
+      - cs-network
+    deploy:
+      replicas: 1
+      restart_policy:
+        delay: 5s
+        max_attempts: 3
+      resources:
+        limits:
+          cpus: "0.1"
+          memory: 100M
+  visualizer:
+    image: dockersamples/visualizer
+    volumes:
+      - "/var/run/docker.sock:/var/run/docker.sock"
+    ports:
+      - "9000:8080"
+    networks:
+      - cs-network
+    deploy:
+      replicas: 1
+      restart_policy:
+        condition: on-failure
+      placement:
+        constraints:
+          - node.role == manager
+volumes:
+  mongodata_cs:
+    external: false
+networks:
+  cs-network: {}
+  public:

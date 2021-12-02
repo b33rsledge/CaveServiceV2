@@ -11,7 +11,10 @@ import dk.msdo.caveservice.domain.Room;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.actuate.info.InfoContributor;
+import org.springframework.boot.actuate.info.MapInfoContributor;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
+import org.springframework.boot.info.GitProperties;
 import org.springframework.context.annotation.Bean;
 import org.springframework.core.env.Environment;
 import org.springframework.data.mongodb.core.MongoTemplate;
@@ -22,7 +25,11 @@ import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.data.redis.serializer.Jackson2JsonRedisSerializer;
 import org.springframework.data.redis.serializer.StringRedisSerializer;
 
+import java.net.InetAddress;
+import java.net.UnknownHostException;
 import java.text.SimpleDateFormat;
+import java.util.HashMap;
+import java.util.Map;
 import java.util.Objects;
 
 @org.springframework.context.annotation.Configuration
@@ -32,12 +39,16 @@ public class Configuration {
     @Autowired
     Environment environment;
 
+    @Autowired
+    GitProperties gitProperties;
+
     /*
         RedisDB Configuration
      */
     @Bean
     @ConditionalOnProperty(value = "storage.room", havingValue = "redisStorage")
     public RedisConnectionFactory connectionFactory() {
+
         RedisStandaloneConfiguration redisConfiguration = new RedisStandaloneConfiguration();
         redisConfiguration.setHostName(Objects.requireNonNull(environment.getProperty("spring.redis.host")));
         redisConfiguration.setPort(Integer.parseInt(Objects.requireNonNull(environment.getProperty("spring.redis.port"))));
@@ -85,12 +96,12 @@ public class Configuration {
     @ConditionalOnProperty(value = "storage.room", havingValue = "mongoStorage")
     public MongoClient mongo() {
 
-        ConnectionString connectionString = new ConnectionString(new StringBuilder().append("mongodb://")
-                .append(environment.getProperty("spring.data.mongodb.host"))
-                .append(":")
-                .append(environment.getProperty("spring.data.mongodb.port"))
-                .append("/")
-                .append(environment.getProperty("spring.data.mongodb.database")).toString());
+        ConnectionString connectionString = new ConnectionString("mongodb://" +
+                environment.getProperty("spring.data.mongodb.host") +
+                ":" +
+                environment.getProperty("spring.data.mongodb.port") +
+                "/" +
+                environment.getProperty("spring.data.mongodb.database"));
 
         MongoClientSettings mongoClientSettings = MongoClientSettings.builder()
                 .applyConnectionString(connectionString)
@@ -102,7 +113,37 @@ public class Configuration {
 
     @Bean
     @ConditionalOnProperty(value = "storage.room", havingValue = "mongoStorage")
-    public MongoTemplate mongoTemplate() throws Exception {
+    public MongoTemplate mongoTemplate() {
         return new MongoTemplate(mongo(), Objects.requireNonNull(environment.getProperty("spring.data.mongodb.database")));
     }
+
+    @Bean
+    InfoContributor getInfoContributor() {
+        Map<String, Object> details = new HashMap<>();
+        details.put("GitHub", "https://github.com/b33rsledge/CaveService");
+        details.put("DockerHub", "https://hub.docker.com/repository/docker/b33rsledge/caveservice/");
+        details.put("DockerHubTag", "v2");
+        Map<String, Object> wrapper = new HashMap<>();
+        wrapper.put("MSDO", details);
+
+        Map<String, Object> serverDetails = new HashMap<>();
+        try {
+            serverDetails.put("name", InetAddress.getLocalHost().getHostName());
+            serverDetails.put("address", InetAddress.getLocalHost().getHostAddress());
+            serverDetails.put("port", environment.getProperty("server.port"));
+        } catch (UnknownHostException e) {
+            e.printStackTrace();
+        }
+        wrapper.put("server", serverDetails);
+
+        Map<String, Object> authorDetails = new HashMap<>();
+        authorDetails.put("ave@bec.dk", "Anton Vestergaard");
+        authorDetails.put("ris@bec.dk", "Rico Sørensen");
+        authorDetails.put("phg@bec.dk", "Peter Højbjerg");
+        wrapper.put("Authors", authorDetails);
+
+        return new MapInfoContributor(wrapper);
+    }
+
+
 }
