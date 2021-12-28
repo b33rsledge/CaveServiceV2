@@ -1,25 +1,23 @@
 #Usage
 #
-# docker build -t b33rsledge/caveservice:v3 -f ./Dockerfile.multistage .
-# docker push b33rsledge/caveservice:v3
+# docker build -t b33rsledge/caveservice:adv1 -f ./Dockerfile.multistage .
+# docker push b33rsledge/caveservice:adv1
 #
-# Manually run in docker with redis DB
-# 1 docker network create csnet
-# 2 docker run --name alpha-redis -p 6379:6379 --hostname redisdb --network=csnet --rm -d redis redis-server
-# 3 docker run --rm  --network=csnet -p 8080:8080  -ti b33rsledge/caveservice java -jar /caveservice.jar 
+# Manually run in docker with memoryStorage
+# 1 docker run  --rm  -p 8080:8080  -ti b33rsledge/caveservice:adv1
 
 #-----------------------------------------------------------------------------------------------------------------------
-#BUILDER 
+#BUILDER
 #-----------------------------------------------------------------------------------------------------------------------
 FROM gradle:6.9.1-jdk11 as builder
 
 MAINTAINER Peter Højbjerg
 
 # Copy the entire skycave project to ensure everything is present.
-COPY --chown=gradle:gradle ./service /root/service
+COPY --chown=gradle:gradle ./ /root/caveservice
 
 # Setup workdir to ensure gradle is run from the right location
-WORKDIR /root/service
+WORKDIR /root/caveservice
 
 # Cleanup build directory
 RUN gradle clean
@@ -27,25 +25,43 @@ RUN gradle clean
 # Create the server daemon jar file to be used in the image
 RUN gradle bootJar
 #-----------------------------------------------------------------------------------------------------------------------
-#Image 
+# Image
 #-----------------------------------------------------------------------------------------------------------------------
-FROM openjdk:14-jdk-alpine
+FROM openjdk:18-jdk-alpine@sha256:e5c5b35b831a4f655074a25604130ce53e33567b82c8a7204f0e5641b66d477e
 
-MAINTAINER AlfaTeam
+MAINTAINER Peter Højbjerg
 
-COPY --from=builder /root/service/build/libs/service-0.0.1-SNAPSHOT.jar /root/service/service.jar
+COPY --from=builder /root/caveservice/service/build/libs/service-0.0.1-SNAPSHOT.jar /usr/cave/caveservice.jar
 
-# Required for healthchecks
-RUN apk --no-cache add curl
-
-# Expose port 8080 as default
+#Expose port 8080 as default
 EXPOSE 8080
 
 #Setup encoding
 ENV JAVA_TOOL_OPTIONS -Dfile.encoding=UTF8
 
-# Setup workdir to ensure later command can find jar file and do ensure yaml file does not need full path in command.
-WORKDIR /root/service
+# Required for healthchecks - could be replaced by wget
+RUN apk --no-cache add curl
 
-#default command 
-CMD ["java", "-jar",  "/root/service/service.jar"]
+# Required for init process to prevent .jar from beeing started as PID 1
+RUN apk add dumb-init
+
+# Add javausers group
+RUN addgroup -S javausers
+
+# Add csuser to javausers group
+RUN adduser -S -s /bin/false -G javausers csuser
+
+# Set ownership to javausers group
+RUN chown -R :javausers /usr/cave
+
+# Setup workdir to ensure later command can find jar file and do ensure yaml file does not need full path in command.
+WORKDIR /usr/cave
+
+# Runs "/usr/bin/dumb-init to have a proper init system in place
+ENTRYPOINT ["/usr/bin/dumb-init", "--"]
+
+# set user
+USER csuser
+
+#default command
+CMD ["java", "-jar",  "/usr/cave/caveservice.jar"]

@@ -1,0 +1,41 @@
+version: '3.4'
+# Usage for caveservice
+
+#  -- After update just run deploy again
+#   docker stack deploy --with-registry-auth -c cs-swarm.yml csstack
+
+# docker service ls
+
+# services will be deployed on nodes with node.labels.type = services
+# databases will be deployed on nodes with node.labels.type = database
+
+services:
+  mastercave:
+    image: b33rsledge/mastercave:adv1
+    container_name: "skycave-demon"
+    ports:
+      - 7777:7777
+    deploy:
+      replicas: 1
+      restart_policy:
+        condition: none
+      resources:
+        limits:
+          cpus: "0.5"
+          memory: 50M
+    networks:
+      - cs-network
+    command: java -jar daemon.jar operations.cpf
+    logging:
+      driver: splunk
+      options:
+        splunk-url: "https://cloud.community.humio.com"
+        splunk-token: "9dd01f8d-9382-4bc8-8de9-918cb55dfa18"
+        splunk-format: "raw"
+        splunk-insecureskipverify: "true"
+        tag: "{{.Name}}/{{.ID}}"
+        labels: "NEurope"
+        env: "PROD"
+networks:
+  cs-network: {}
+  public:

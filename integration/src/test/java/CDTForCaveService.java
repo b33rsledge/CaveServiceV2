@@ -40,9 +40,9 @@ public class CDTForCaveService {
 
     @Rule
     public GenericContainer alfaCaveService =
-            new GenericContainer("b33rsledge/caveservice:v2")
+            new GenericContainer("b33rsledge/caveservice:adv1")
                     .withExposedPorts(SERVER_PORT)
-                    .withCommand("java -jar /root/caveservice/caveservice.jar --spring.redis.host=" + REDIS_NETWORKNAME + " --spring.redis.port=" + SERVER_REDIS_PORT + " --storage.room="+ MEMORY_STORAGE);
+                    .withCommand("java -jar /usr/cave/caveservice.jar  --storage.room="+ MEMORY_STORAGE);
 
     private String serverRootUrl;
 

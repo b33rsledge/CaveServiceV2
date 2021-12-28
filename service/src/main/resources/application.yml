@@ -10,6 +10,8 @@ spring:
       host: "localhost"
       database: "caveservice"
       port:  27017
+  autoconfigure:
+    exclude: org.springframework.boot.autoconfigure.mongo.MongoAutoConfiguration, org.springframework.boot.autoconfigure.data.redis.RedisAutoConfiguration
 management:
   health:
     redis:
@@ -19,7 +21,7 @@ management:
   endpoint:
     health:
       show-details: always
-      show-components: always
+      show-components: never
 
     # Shutdown endpoint configuration
     shutdown:
@@ -29,14 +31,19 @@ management:
   endpoints:
     web:
       exposure:
-        include: 'health, info'
+        include: 'health'
 server:
   error:
     include-message: always
   port: 8080
+#  ssl:
+#    key-store: classpath:${KEYSTORE:keystore.p12}
+#    key-store-password: Maskot99
+#    keyStoreType: PKCS12
+#    keyAlias: caveservice
 debug: false
 storage:
   #room: redisStorage
-  room: redisStorage
-  #room: memoryStorage
+  #room: redisStorage
+  room: memoryStorage
 

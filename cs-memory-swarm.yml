@@ -23,7 +23,7 @@ services:
     networks:
       - cs-network
 
-    command: java -jar /root/service/service.jar
+    command: java -jar /usr/cave/caveservice.jar
 
     # Enable healtcheck and set options
     healthcheck:

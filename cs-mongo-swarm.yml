@@ -13,7 +13,7 @@ services:
     environment:
 
       # Disable autoconfiguration of RedisDB because it is not used
-      autoconfigure.exclude: org.springframework.boot.autoconfigure.data.redis.RedisAutoConfiguration
+      +
 
       # Mongo DB properties - theese are just relevant when storage.room = mongoStorage
       spring.data.mongodb.host: mongocs
@@ -33,7 +33,7 @@ services:
       - mongocs
 
     # command to execute in b33rsledge/caveservice:adv1
-    command: java -jar /root/service/service.jar
+    command: java -jar /usr/cave/caveservice.jar
 
     # Enable health check and set options
     healthcheck:

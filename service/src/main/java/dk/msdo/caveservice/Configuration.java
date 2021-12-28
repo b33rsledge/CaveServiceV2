@@ -39,8 +39,10 @@ public class Configuration {
     @Autowired
     Environment environment;
 
+    /*
     @Autowired
     GitProperties gitProperties;
+     */
 
     /*
         RedisDB Configuration
@@ -117,6 +119,7 @@ public class Configuration {
         return new MongoTemplate(mongo(), Objects.requireNonNull(environment.getProperty("spring.data.mongodb.database")));
     }
 
+    /*
     @Bean
     InfoContributor getInfoContributor() {
         Map<String, Object> details = new HashMap<>();
@@ -142,8 +145,10 @@ public class Configuration {
         authorDetails.put("phg@bec.dk", "Peter Højbjerg");
         wrapper.put("Authors", authorDetails);
 
+        gitProperties.getCommitTime();
+
         return new MapInfoContributor(wrapper);
     }
-
+*/
 
 }

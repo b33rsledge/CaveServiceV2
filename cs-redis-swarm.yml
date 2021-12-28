@@ -2,7 +2,7 @@ version: '3.4'
 # Usage for caveservice
 
 #  -- After update just run deploy again
-#   docker stack deploy --with-registry-auth -c cs-swarm.yml csstack
+#   docker stack deploy --with-registry-auth -c cs-redis-swarm.yml csstack
 
 # docker service ls
 
@@ -34,7 +34,7 @@ services:
       - cs-network
     depends_on:  #not working in swarm mode
       - rediscs
-    command: java -jar /root/service/service.jar
+    command: java -jar /usr/cave/caveservice.jar
 
     # Health check options
     healthcheck:
@@ -71,21 +71,6 @@ services:
 #      interval: 60s
 #      timeout: 3s
 #      retries: 5
-  visualizer:
-    image: dockersamples/visualizer
-    volumes:
-      - "/var/run/docker.sock:/var/run/docker.sock"
-    ports:
-      - "9000:8080"
-    networks:
-      - cs-network
-    deploy:
-      replicas: 1
-      restart_policy:
-        condition: on-failure
-      placement:
-        constraints:
-          - node.role == manager
 volumes:
   redisdata_cs:
     external: false

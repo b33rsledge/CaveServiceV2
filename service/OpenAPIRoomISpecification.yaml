@@ -1,7 +1,7 @@
 openapi: 3.0.3
 servers:
   - description: Cave Service on Digital Ocean
-    url: http://165.232.71.76:8080/v2
+    url: http://msdo.hoejbjerg.family:8080/v2
 info:
   description: API specification for SkyCave cave service.
   version: "2.0.0"
